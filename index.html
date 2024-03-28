@@ -1,0 +1,861 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <meta charset="utf-8">
+  <meta name="description"
+    content="Explaining the Implicit Neural Canvas: Connecting Pixels to Neurons by Tracing their Contributions">
+  <meta name="keywords" content="diffusion, lip-sync, dubbing">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Explaining the Implicit Neural Canvas: Connecting Pixels to Neurons by Tracing their Contributions</title>
+
+  <!-- Global site tag (gtag.js) - Google Analytics -->
+  <!-- <script async src="https://www.googletagmanager.com/gtag/js?id=G-PYVRSFMDRL"></script> -->
+  <script>
+    window.dataLayer = window.dataLayer || [];
+
+    function gtag() {
+      dataLayer.push(arguments);
+    }
+
+    gtag('js', new Date());
+
+    gtag('config', 'G-PYVRSFMDRL');
+  </script>
+
+  <link href="https://fonts.googleapis.com/css?family=Google+Sans|Noto+Sans|Castoro" rel="stylesheet">
+
+
+  <link rel="stylesheet" href="./static/css/bulma.min.css">
+  <link rel="stylesheet" href="./static/css/bulma-carousel.min.css">
+  <link rel="stylesheet" href="./static/css/bulma-slider.min.css">
+  <link rel="stylesheet" href="./static/css/fontawesome.all.min.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/jpswalsh/academicons@1/css/academicons.min.css">
+  <link rel="stylesheet" href="./static/css/index.css">
+  <!-- <link rel="icon" href="./static/images/favicon.svg"> -->
+  <!-- <link rel="icon" href="./static/images/favicon.png"> -->
+
+
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+  <script defer src="./static/js/fontawesome.all.min.js"></script>
+  <script src="./static/js/bulma-carousel.min.js"></script>
+  <script src="./static/js/bulma-slider.min.js"></script>
+  <!-- <script src="./static/js/loop_all_vids.js"></script> -->
+  <!-- <script src="./static/js/index.js"></script> -->
+
+
+
+  <style>
+    ol#horizontal_list li {
+      display: inline;
+    }
+
+
+    ol.horizontal {
+      list-style-type: decimal;
+      width: 600px;
+    }
+
+    ol.horizontal li {
+      float: left;
+      width: 200px;
+      padding: 2px 0px;
+    }
+
+    /*
+/* Tooltip container */
+    .tooltip {
+      position: relative;
+      display: inline-block;
+      border-bottom: 1px dotted black;
+      /* If you want dots under the hoverable text */
+    }
+
+    .tooltip {
+      display: inline-block;
+      position: relative;
+      border-bottom: 1px dotted #666;
+      text-align: left;
+    }
+
+    .tooltip h3 {
+      margin: 12px 0;
+    }
+
+    .tooltip .right {
+      min-width: 200px;
+      max-width: 400px;
+      top: 50%;
+      left: 100%;
+      margin-left: 20px;
+      transform: translate(0, -50%);
+      padding: 0;
+      color: #EEEEEE;
+      background-color: #444444;
+      font-weight: normal;
+      font-size: 13px;
+      border-radius: 8px;
+      position: absolute;
+      z-index: 99999999;
+      box-sizing: border-box;
+      box-shadow: 0 1px 8px rgba(0, 0, 0, 0.5);
+      visibility: hidden;
+      opacity: 0;
+      transition: opacity 0.8s;
+    }
+
+    .tooltip:hover .right {
+      visibility: visible;
+      opacity: 1;
+    }
+
+    .tooltip .right img {
+      width: 400px;
+      border-radius: 8px 8px 0 0;
+    }
+
+    .tooltip .text-content {
+      padding: 10px 20px;
+    }
+
+    .tooltip .right i {
+      position: absolute;
+      top: 50%;
+      right: 100%;
+      margin-top: -12px;
+      width: 12px;
+      height: 24px;
+      overflow: hidden;
+    }
+
+    .tooltip .right i::after {
+      content: '';
+      position: absolute;
+      width: 12px;
+      height: 12px;
+      left: 0;
+      top: 50%;
+      transform: translate(50%, -50%) rotate(-45deg);
+      background-color: #444444;
+      box-shadow: 0 1px 8px rgba(0, 0, 0, 0.5);
+    }
+  </style>
+
+
+</head>
+
+<body>
+
+  <!-- <nav class="navbar" role="navigation" aria-label="main navigation">
+  <div class="navbar-brand">
+    <a role="button" class="navbar-burger" aria-label="menu" aria-expanded="false">
+      <span aria-hidden="true"></span>
+      <span aria-hidden="true"></span>
+      <span aria-hidden="true"></span>
+    </a>
+  </div>
+  <div class="navbar-menu">
+    <div class="navbar-start" style="flex-grow: 1; justify-content: center;">
+      <a class="navbar-item" href="https://keunhong.com">
+      <span class="icon">
+          <i class="fas fa-home"></i>
+      </span>
+      </a>
+
+      <div class="navbar-item has-dropdown is-hoverable">
+        <a class="navbar-link">
+          More Research
+        </a>
+        <div class="navbar-dropdown">
+          <a class="navbar-item" href="https://hypernerf.github.io">
+            HyperNeRF
+          </a>
+          <a class="navbar-item" href="https://nerfies.github.io">
+            Nerfies
+          </a>
+          <a class="navbar-item" href="https://latentfusion.github.io">
+            LatentFusion
+          </a>
+          <a class="navbar-item" href="https://photoshape.github.io">
+            PhotoShape
+          </a>
+        </div>
+      </div> 
+    </div>
+
+  </div>
+</nav> -->
+
+
+  <section class="hero">
+    <!-- <div class="hero-body"> -->
+    <div class="container is-max-desktop">
+      <!-- <div class="columns is-centered"> -->
+      <div class="column has-text-centered">
+        <h1 class="title is-1 publication-title">Explaining the Implicit Neural Canvas (XINC): Connecting Pixels to
+          Neurons by Tracing their Contributions</h1>
+
+
+        <div class="is-size-5 publication-authors">
+          <span class="author-block">
+            <a href="https://namithap10.github.io/">Namitha Padmanabhan</a>, </span>
+          <!-- <sup>1</sup>, -->
+          <span class="author-block">
+            <a href="https://mgwillia.github.io/">Matthew Gwilliam</a>, </span>
+          <span class="author-block">
+            <a href="https://www.cs.umd.edu/~pulkit/">Pulkit Kumar</a>, </span>
+          <span class="author-block">
+            <a href="https://www.cs.umd.edu/~shishira/">Shishira R Maiya</a>, </span>
+          <span class="author-block">
+            <a href="https://maxlikelihood.ai/">Max Ehrlich</a>, </span>
+          <span class="author-block">
+            <a href="http://www.cs.umd.edu/~abhinav/">Abhinav Shrivastava</a></span>
+
+        </div>
+
+        <div class="is-size-5 publication-authors">
+          <span class="author-block">University of Maryland, College Park</span>
+          <!-- <span class="author-block"><sup>2</sup>New York University</span> -->
+        </div>
+
+        <div class="column has-text-centered">
+          <div class="publication-links">
+            <!-- PDF Link. -->
+            <span class="link-block">
+              <a href="https://arxiv.org/pdf/2401.10217.pdf" class="external-link button is-normal is-rounded is-dark">
+                <span class="icon">
+                  <i class="fas fa-file-pdf"></i>
+                </span>
+                <span>Paper</span>
+              </a>
+            </span>
+            <!-- arXiv Link. -->
+            <span class="link-block">
+              <a href="https://arxiv.org/abs/2401.10217" class="external-link button is-normal is-rounded is-dark">
+                <span class="icon">
+                  <i class="ai ai-arxiv"></i>
+                </span>
+                <span>arXiv</span>
+              </a>
+            </span>
+            <!-- Video Link. -->
+            <!-- <span class="link-block">
+                <a href="#in-the-wild"
+                   class="external-link button is-normal is-rounded is-dark">
+                  <span class="icon">
+                      <i class="fab fa-youtube"></i>
+                  </span>
+                  <span>Videos</span>
+                </a>
+              </span> -->
+            <!-- Code Link. -->
+            <span class="link-block">
+                <a href="https://github.com/namithap10/xinc"
+                   class="external-link button is-normal is-rounded is-dark">
+                  <span class="icon">
+                      <i class="fab fa-github"></i>
+                  </span>
+                  <span>Code</span>
+                  </a>
+              </span>
+            <!--              <!~~ Dataset Link. ~~>
+              <span class="link-block">
+                <a href=""
+                   class="external-link button is-normal is-rounded is-dark">
+                  <span class="icon">
+                      <i class="far fa-images"></i>
+                  </span>
+                  <span>Data</span>
+                  </a>
+              </span>-->
+          </div>
+
+        </div>
+      </div>
+      <!-- </div> -->
+    </div>
+    <!-- </div> -->
+  </section>
+
+  <!--<section class="hero teaser">
+  <div class="container is-max-desktop">
+    <div class="hero-body">
+      <video id="teaser" autoplay muted loop playsinline height="100%">
+        <source src="./static/videos/teaser.mp4"
+                type="video/mp4">
+      </video>
+      <h2 class="subtitle has-text-centered">
+        <span class="dnerf">Nerfies</span> turns selfie videos from your phone into
+        free-viewpoint
+        portraits.
+      </h2>
+    </div>
+  </div>
+</section>-->
+
+  <!-- <ul id="website_vids"></ul> -->
+
+  <section class="section">
+    <div class="container  is-max-desktop has-text-centered">
+      <h2 class="subtitle has-text-centered">
+        <span class="dnerf"><b>XINC</b></span> dissects Implicit Neural Representation (INR) models to understand how
+        neurons represent
+        images and videos and to reveal the inner workings of INRs.
+        <!-- which are under-explored. -->
+      </h2>
+
+      <!-- Teaser -->
+      <div class="container  is-max-desktop has-text-centered">
+        <img id="teaser" src="./static/images/teaser_v2.png" alt="Teaser" />
+      </div>
+
+      <!--/ Paper video. -->
+
+      <br>
+
+      <!-- Abstract. -->
+      <div class="columns is-centered has-text-centered">
+        <div class="column is-four-fifths">
+          <h2 class="title is-3">Abstract</h2>
+          <div class="content has-text-justified">
+            <p>
+              The many variations of Implicit Neural Representations (INRs), where a neural network is trained as a
+              continuous representation of a signal, have tremendous practical utility for downstream tasks including
+              novel view synthesis, video compression, and image superresolution.
+              Unfortunately, the inner workings of these networks are seriously under-studied. Our work, eXplaining the
+              Implicit Neural Canvas (XINC), is a unified framework for explaining properties of INRs by examining the
+              strength of each neuron's contribution to each output pixel.
+              We call the aggregate of these contribution maps the Implicit Neural Canvas and we use this concept to
+              demonstrate that the INRs which we study learn to ''see'' the frames they represent in surprising ways.
+              For example, INRs tend to have highly distributed representations.
+              While lacking high-level object semantics, they have a significant bias for color and edges, and are
+              almost entirely space-agnostic. We arrive at our conclusions by examining how objects are represented
+              across time in video INRs, using clustering to visualize similar neurons across layers and architectures,
+              and show that this is dominated by motion.
+              These insights demonstrate the general usefulness of our analysis framework.
+            </p>
+
+          </div>
+        </div>
+      </div>
+      <!--/ Abstract. -->
+
+      <!-- Method - Minimal -->
+      <!-- <div class="columns is-centered has-text-centered">
+        <div class="column is-four-fifths ">
+          <img src="./static/images/framework.png" class="interpolation-image"
+            alt="XINC framework." />
+          <br>
+        <br>
+
+          <p>
+            <b>Overview of our approach</b>:
+            <br>
+            <b>Left:</b> We dissect MLP-based INRs by aggregating their activations (weights multiplied by previous
+            layer outputs) for each pixel at each neuron.
+            <b>Right:</b> We extend this core idea of pixel-to-neuron mapping for CNN-based INRs, NeRV [1] by computing
+            intermediate feature maps that are not yet summed on the input dimension.
+          </p>
+        </div>
+      </div> -->
+  </section>
+
+  <section class="section">
+    <div class="container is-max-desktop">
+      <div class="columns is-centered">
+        <div class="column">
+          <h2 class="title is-3 has-text-centered">How does XINC work?</h2>
+
+          <p class="content has-text-justified">
+            <span class="dnerf">XINC</span> dissects an INR to create contribution maps for each “neuron” (group of
+            weights), which connect neurons
+            to individual pixels in terms of their activations. Together, these contribution maps comprise the “implicit
+            neural canvas” for a visual signal.
+            <span class="dnerf">XINC</span> unveils surprising characteristics such as highly distributed
+            representations, bias for low-level
+            features like color and edges over space, lack of high-level object semantics and in video INRs, the
+            dominance of motion in object representation.
+          </p>
+        </div>
+      </div>
+
+      <img src="./static/images/framework.png" class="interpolation-image" alt="XINC framework." />
+      
+      <br>
+      <br>
+
+      <div class="has-text-centered">
+        <!-- <b>Overview of our approach</b>:
+        <br> -->
+        <p>
+          <b>Left:</b> We dissect MLP-based INRs such as FFN [1] by aggregating their activations (weights
+          multiplied by previous
+          layer outputs) for each pixel at each neuron.
+          <b>Right:</b> We extend this core idea of pixel-to-neuron mapping for CNN-based INRs, NeRV [2] by
+          computing
+          intermediate feature maps that are not yet summed on the input dimension.
+        </p>
+      </div>
+
+      <!-- <div class="columns is-centered has-text-centered">
+        <div class="column is-four-fifths">
+
+          <img src="./static/images/framework.png" class="interpolation-image" alt="XINC framework." />
+
+          <br>
+          <br>
+
+        </div>
+      </div> -->
+
+    </div>
+  </section>
+
+  <br>
+
+
+  <!-- MLP Image INR - FFN Contribution Maps -->
+  <section class="hero teaser" id="ffn">
+    <div class="container is-max-desktop">
+      <h3 class="title is-3 has-text-centered">Dissecting MLP-based Image INRs</h3>
+      <!--  - FFN Contribution Maps -->
+
+      <!-- <h4 class="subtitle has-text-centered">
+        <div class="columns is-centered">
+          <div class="column">
+            Image &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
+          </div>
+          <div class="column"> 
+            FFN Layer 3 
+          </div>
+          <div class="column">
+            FFN Layer 2 &nbsp;&nbsp;&nbsp;&nbsp; 
+          </div>
+          <div class="column">
+            FFN Layer 1 &nbsp;&nbsp;&nbsp;&nbsp; 
+          </div>
+        </div>
+      </h4> -->
+
+      <img src="./static/images/ffn_maps.jpg" class="interpolation-image" alt="FFN Maps." />
+
+      <br>
+      <br>
+      <p class="has-text-justified">
+        Using <span class="dnerf">XINC</span> to dissect the FFN network, we can obtain neuron contribution maps and
+        group contributions on the basis of Gabor filter feature clusters in the input image.
+        The above figure shows the average contribution map of neurons in each of two clusters, revealing how early FFN
+        layers manifest strong Fourier patterns, and how the last layers tend to resemble the image.
+        <!-- This shows neurons of some clusters make up for capturing a significant portion of the visual information. -->
+      </p>
+
+  </section>
+
+  <br>
+  <br>
+
+  <!-- NeRV Contrib Maps - Head and Penultimate -->
+  <section class="hero teaser" id="nerv">
+    <div class="container is-max-desktop">
+      <h2 class="title is-3 has-text-centered">Dissecting CNN-based Video INRs</h2>
+      <br>
+      <h2 class="title is-4 has-text-left">NeRV Head Layer Neuron Contributions</h2>
+
+      <h4 class="subtitle has-text-centered">
+        <div class="columns is-centered">
+          <div class="column">
+            &nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Source Video
+          </div>
+          <div class="column">
+            &nbsp;&nbsp;&nbsp; Neuron (i)
+          </div>
+          <div class="column">
+            &nbsp;&nbsp;&nbsp; Neuron (ii) &nbsp;&nbsp;&nbsp;
+          </div>
+          <div class="column">
+            &nbsp;&nbsp;&nbsp;&nbsp; Neuron (iii) &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+          </div>
+          <div class="column">
+            &nbsp;&nbsp; Neuron (iv) &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+          </div>
+        </div>
+      </h4>
+
+      <div class="container is-max-desktop">
+        <div class="content has-text-centered">
+          <!-- width="640" height="480" 
+          width="640" height="480" 
+          width="640" height="480" 
+          width="640" height="480" 
+          width="640" height="480"  -->
+          <!-- <video id="itw" height="100%" defaultPlaybackRate=1.0 controls> -->
+          <video id="itw" height="100%" defaultPlaybackRate=1.0 controls>
+            <source src="./static/website_videos/maps_over_frames/0005/output/0005_head_contribs.mp4" type="video/mp4">
+          </video>
+          <video id="itw" height="100%" defaultPlaybackRate=1.0 controls>
+            <source src="./static/website_videos/maps_over_frames/0175/output/0175_head_contribs.mp4" type="video/mp4">
+          </video>
+          <video id="itw" id="itw" height="100%" defaultPlaybackRate=1.0 controls>
+            <source
+              src="./static/website_videos/maps_over_frames/26_cblDl5vCZnw/output/26_cblDl5vCZnw_head_contribs.mp4"
+              type="video/mp4">
+          </video>
+          <video id="itw" height="100%" defaultPlaybackRate=1.0 controls>
+            <source
+              src="./static/website_videos/maps_over_frames/127_-hIVCYO4C90/output/127_-hIVCYO4C90_head_contribs.mp4"
+              type="video/mp4">
+          </video>
+          <video id="itw" height="100%" defaultPlaybackRate=1.0 controls>
+            <source
+              src="./static/website_videos/maps_over_frames/1327_e96s6pJ5x3Y/output/1327_e96s6pJ5x3Y_head_contribs.mp4"
+              type="video/mp4">
+          </video>
+          <video id="itw" height="100%" defaultPlaybackRate=1.0 controls>
+            <source
+              src="./static/website_videos/maps_over_frames/459_S0bHM1Hm0PU/output/459_S0bHM1Hm0PU_head_contribs.mp4"
+              type="video/mp4">
+          </video>
+        </div>
+      </div>
+
+      <br>
+      <p class="has-text-justified">
+        Each of the videos above shows the input frames of a source video and the contribution maps for
+        a few randomly sampled neurons from the outermost layer of NeRV, for each frame.
+        The last layer thus tends to resemble the image and the various neurons seem to capture a variety of features,
+        including edges, textures, colors, and depth.
+        These maps show that the behavior of a neuron is not simply to represent a pixel or set of pixels and instead
+        learns some attributes of the scene.
+        <!-- reminiscent of classical image processing filter. -->
+      </p>
+
+      <br>
+      <br>
+
+      <h2 class="title is-4 has-text-left">NeRV Penultimate Layer Neuron Contributions</h2>
+
+      <h4 class="subtitle has-text-centered">
+        <div class="columns is-centered">
+          <div class="column">
+            &nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Source Video
+          </div>
+          <div class="column">
+            &nbsp;&nbsp;&nbsp; Neuron (i)
+          </div>
+          <div class="column">
+            &nbsp;&nbsp;&nbsp; Neuron (ii) &nbsp;&nbsp;&nbsp;
+          </div>
+          <div class="column">
+            &nbsp;&nbsp;&nbsp;&nbsp; Neuron (iii) &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+          </div>
+          <div class="column">
+            &nbsp;&nbsp; Neuron (iv) &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+          </div>
+        </div>
+      </h4>
+
+      <div class="container is-max-desktop">
+        <div class="content has-text-centered">
+          <video id="itw" height="100%" defaultPlaybackRate=1.0 controls>
+            <source src="./static/website_videos/maps_over_frames/0005/output/0005_blk_3_contribs.mp4" type="video/mp4">
+          </video>
+          <video id="itw" height="100%" defaultPlaybackRate=1.0 controls>
+            <source src="./static/website_videos/maps_over_frames/0175/output/0175_blk_3_contribs.mp4" type="video/mp4">
+          </video>
+          <video id="itw" height="100%" defaultPlaybackRate=1.0 controls>
+            <source
+              src="./static/website_videos/maps_over_frames/26_cblDl5vCZnw/output/26_cblDl5vCZnw_blk_3_contribs.mp4"
+              type="video/mp4">
+          </video>
+          <video id="itw" height="100%" defaultPlaybackRate=1.0 controls>
+            <source
+              src="./static/website_videos/maps_over_frames/127_-hIVCYO4C90/output/127_-hIVCYO4C90_blk_3_contribs.mp4"
+              type="video/mp4">
+          </video>
+          <video id="itw" height="100%" defaultPlaybackRate=1.0 controls>
+            <source
+              src="./static/website_videos/maps_over_frames/1327_e96s6pJ5x3Y/output/1327_e96s6pJ5x3Y_blk_3_contribs.mp4"
+              type="video/mp4">
+          </video>
+          <video id="itw" height="100%" defaultPlaybackRate=1.0 controls>
+            <source
+              src="./static/website_videos/maps_over_frames/459_S0bHM1Hm0PU/output/459_S0bHM1Hm0PU_blk_3_contribs.mp4"
+              type="video/mp4">
+          </video>
+        </div>
+      </div>
+
+      <br>
+      <p class="has-text-justified">
+        Each video above shows the input frames of a source video and the contribution maps for
+        a few randomly sampled neurons from the penultimate layer of NeRV, for each frame.
+        In general, NeRV layers are reminiscent of classical image processing filters.
+      </p>
+
+  </section>
+
+  <br>
+  <br>
+
+  <section class="hero teaser" id="nerv_flow">
+    <div class="container is-max-desktop">
+      <h3 class="title is-3 has-text-centered">Correlation between Motion and Neuron Contributions</h3>
+      <br>
+      <!-- <h4 class="subtitle has-text-centered">
+        <div class="columns is-centered">
+          <div class="column">
+            &nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Source Video
+          </div>
+          <div class="column">
+            &nbsp;&nbsp;&nbsp; Neuron (i)
+          </div>
+          <div class="column">
+            &nbsp;&nbsp;&nbsp; Neuron (ii) &nbsp;&nbsp;&nbsp;
+          </div>
+          <div class="column">
+            &nbsp;&nbsp;&nbsp;&nbsp; Neuron (iii) &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+          </div>
+          <div class="column">
+            &nbsp;&nbsp; Neuron (iv) &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+          </div>
+        </div>
+      </h4> -->
+
+      <h4 class="subtitle has-text-centered">
+        <div class="columns is-centered">
+          <div class="column">
+            &nbsp;&nbsp;&nbsp; Source Video
+          </div>
+          <div class="column">
+            Flow
+          </div>
+          <div class="column">
+            Head Layer Fluctuation &nbsp;&nbsp;&nbsp;&nbsp;
+          </div>
+          <div class="column has-text-centered">
+            Penultimate Layer Fluctuation
+            <!-- &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; -->
+          </div>
+        </div>
+      </h4>
+
+      <!-- <video id="itw" autoplay muted loop playsinline height="100%" -->
+      <div class="container is-max-desktop">
+        <div class="content has-text-centered">
+          <video id="itw" autoplay muted loop playsinline height="100%">
+            <source src="./static/website_videos/flow_contrib_fluctuation/0175/output/0175_flow.mp4" type="video/mp4">
+          </video>
+          <!-- <video id="itw" height="100%" defaultPlaybackRate=1.0 controls>
+            <source src="./static/website_videos/0005_flow.mp4" type="video/mp4">
+          </video> -->
+          <video id="itw" autoplay muted loop playsinline height="100%">
+            <source src="./static/website_videos/flow_contrib_fluctuation/0035/output/0035_flow.mp4" type="video/mp4">
+          </video>
+          <video id="itw" autoplay muted loop playsinline height="100%">
+            <source src="./static/website_videos/flow_contrib_fluctuation/26_cblDl5vCZnw/output/26_cblDl5vCZnw_flow.mp4"
+              type="video/mp4">
+          </video>
+          <video id="itw" autoplay muted loop playsinline height="100%">
+            <source src="./static/website_videos/flow_contrib_fluctuation/82_xz40b41FHfs/output/82_xz40b41FHfs_flow.mp4"
+              type="video/mp4">
+          </video>
+        </div>
+      </div>
+
+      <br>
+      <p class="has-text-justified">
+        Each video above shows the
+        <!-- input frames of a source video, the optical flow and the corresponding change in contributions of the head and penultimate layers of NeRV neurons. -->
+        correlation between motion in the source video and changes in NeRV neuron contributions over time by computing
+        optical flow between two adjacent frames
+        and the difference in contribution maps between those frames.
+        Fluctuation is driven by motion, and it seems the areas revealed by motion matter as much as the objects that
+        are actually moving, since
+        when a moving object reveals new background, this causes fluctuations in the spatially proximal pixels.
+        Thus, in spite of its lack of high-level object semantics, the changes in how NeRV represents a video over time
+        are dominated
+        by the motion of the entities in the video.
+      </p>
+
+  </section>
+
+  <!-- <script src="./static/js/loop_all_vids.js"></script> -->
+
+  <section class="section">
+    <div class="container is-max-desktop">
+
+      <!-- Animation. -->
+      <!--    <div class="columns is-centered">
+    <!~~ <div class="columns "> ~~>
+      <div class="column has-text-centered is-full-width">
+      <!~~ <div class="column has-text-centered  is-three-fifths"> ~~>
+        <h2 class="title is-3">Diffusion Process: Intermediate States</h2>
+
+        <!~~ Interpolating. ~~>
+        <!~~ <h3 class="title is-4">Diffusion Process: Intermediate States</h3> ~~>
+        <!~~ <div class="content has-text-centered is-centred has-text-justified"> ~~>
+          <div class="content has-text-centered is-centred ">
+          <p>
+            Use the slider here to iteratively denoise left frame to the right
+            frame.
+          </p>
+        </div>
+        <!~~ <div class="columns is-three-fifths"> ~~>
+          <div class="columns is-centered is-fullwidth ">
+          <div class="columns is-centered is-vcentered interpolation-panel">
+          <!~~ <div class="columns is-vcentered"> ~~>
+            <div class="column is-3 has-text-centered">
+              <img src="./static/images/interpolate_start.jpg"
+                  class="interpolation-image"
+                  alt="Interpolate start reference image."/>
+              <p>Masked Frame</p>
+            </div>
+            <div class="column is-3 is-centered has-text-centered interpolation-video-column">
+              <div id="interpolation-image-wrapper">
+                Loading...
+              </div>
+              <input class="slider is-fullwidth is-large is-info"
+                    id="interpolation-slider"
+                    step="1" min="0" max="100" value="0" type="range">
+            </div>
+            <div class="column is-3 has-text-centered">
+              <img src="./static/images/interpolate_end.jpg"
+                  class="interpolation-image"
+                  alt="Interpolation end reference image."/>
+              <p class="is-bold">Generated Frame</p>
+            </div>
+          </div>
+        </div>
+        <br/>
+        <!~~/ Interpolating. ~~>
+      </div>
+    </div>-->
+      <!--/ Animation. -->
+
+      <!-- Animation. -->
+      <!-- <div class="columns is-centered">
+        <div class="column is-full-width">
+          <h2 class="title is-3">Diffusion Process Visualization</h2>
+
+          Interpolating.
+          <h3 class="title is-4">Intermediate States</h3>
+          <div class="content has-text-justified">
+            <p>
+              Use the slider here to iteratively denoise left frame to the right
+              frame.
+            </p>
+          </div>
+
+          <div class="columns">
+            <div class="column is-8 is-offset-2">
+              <div class="columns is-vcentered interpolation-panel">
+
+
+                <div class="column is-3 has-text-centered">
+                  <img src="./static/images/interpolate_start.jpg" class="interpolation-image"
+                    alt="Interpolate start reference image." />
+                  <p>Masked Frame</p>
+                </div>
+                <div class="column  interpolation-video-column">
+                  <div class="columns is-centered ">
+                    <div id="interpolation-image-wrapper" class="columns is-centered">
+                      Loading...
+                    </div>
+                  </div>
+                  <div class="columns is-centered">
+                    <div class="column is-three-fifths">
+                      <input class="slider is-half is-centered is-large is-info" id="interpolation-slider" step="1"
+                        min="0" max="100" value="0" type="range">
+                    </div>
+                  </div>
+                </div>
+                <div class="column is-3 has-text-centered">
+                  <img src="./static/images/interpolate_end.jpg" class="interpolation-image"
+                    alt="Interpolation end reference image." />
+                  <p class="is-bold">Generated Frame</p>
+                </div>
+
+
+              </div>
+            </div>
+          </div>
+
+
+          <br />
+          / Interpolating.
+
+        </div>
+      </div> -->
+      <!--/ Animation. -->
+
+      <!-- Concurrent Work. -->
+      <div class="columns is-centered">
+        <div class="column is-full-width">
+          <h2 class="title is-3">References</h2>
+
+          <ol>
+
+            <li>
+              <p><a href="https://arxiv.org/abs/2006.10739">Matthew Tancik, Pratul P. Srinivasan, Ben Mildenhall, Sara
+                  Fridovich-Keil, Nithin Raghavan, Utkarsh Singhal, Ravi Ramamoorthi, Jonathan T. Barron, and Ren Ng.
+                  Fourier Features Let Networks Learn High Frequency Functions in Low Dimensional Domains. In
+                  <i>Advances in Neural Information Processing Systems (NeurIPS)</i>, 2020.</a></p>
+            </li>
+            <li>
+              <p><a href="https://arxiv.org/abs/2110.13903">
+                  Hao Chen, Bo He, Hanyu Wang, Yixuan Ren, Ser Nam Lim, and Abhinav Shrivastava.
+                  Nerv: Neural representations for videos. In <i>Advances in Neural Information Processing Systems
+                    (NeurIPS)</i>, 2021
+                </a></p>
+            </li>
+          </ol>
+
+        </div>
+      </div>
+    </div>
+    <!--/ Concurrent Work. -->
+
+    </div>
+  </section>
+
+  <section class="section" id="BibTeX">
+    <div class="container is-max-desktop content">
+      <h2 class="title">BibTeX</h2>
+      <pre><code>
+      @misc{padmanabhan2024explaining,
+        title={Explaining the Implicit Neural Canvas: Connecting Pixels to Neurons by Tracing their Contributions}, 
+        author={Namitha Padmanabhan and Matthew Gwilliam and Pulkit Kumar and Shishira R Maiya and Max Ehrlich and Abhinav Shrivastava},
+        year={2024},
+        eprint={2401.10217},
+        archivePrefix={arXiv},
+        primaryClass={cs.CV}
+      }
+      </code></pre>
+    </div>
+  </section>
+
+  <footer class="footer">
+    <div class="container">
+      <div class="content has-text-centered">
+      </div>
+      <div class="columns is-centered">
+        <div class="column is-8">
+          <div class="content">
+            <p class="has-text-centered">
+              <!-- This website is licensed under a <a rel="license"
+                href="http://creativecommons.org/licenses/by-sa/4.0/">Creative
+                Commons Attribution-ShareAlike 4.0 International License</a>. -->
+              The source code of this webpage is based on the <a
+                href="https://github.com/nerfies/nerfies.github.io">Nerfies</a> project webpage.
+            </p>
+            <p>
+
+          </div>
+        </div>
+      </div>
+    </div>
+  </footer>
+
+</body>
+
+</html>
